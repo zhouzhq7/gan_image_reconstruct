@@ -146,7 +146,9 @@ def train():
                     (n_iter+1)//num_of_iter_one_epoch, n_epoch_init, time.time() - epoch_time, total_mse_loss / n_iter)
                 epoch_time = time.time()
                 print (log)
-
+            if ((n_iter+1) % (10*num_of_iter_one_epoch) == 0):
+                tl.files.save_npz(net_g.all_params,
+                                  name=checkpoints_dir + '/g_{}_init.npz'.format(tl.global_flag['mode']), sess=sess)
             step_time = time.time()
             imgs = sess.run(img_batch)
             err, _ = sess.run([mse_loss, g_optim_init], feed_dict={t_image:imgs.astype(np.float32)})
@@ -155,9 +157,9 @@ def train():
             total_mse_loss += err
             n_iter += 1
 
-
-
     except tf.errors.OutOfRangeError:
+        tl.files.save_npz(net_g.all_params,
+                          name=checkpoints_dir + '/g_{}_init.npz'.format(tl.global_flag['mode']), sess=sess)
         print ("Done initializing G.")
 
 
