@@ -5,12 +5,13 @@ from tensorlayer.layers import *
 
 
 def VGG19(rgb, reuse):
+    # rgb: image inputs pixel value range [0, 255]
     VGG_MEAN = [103.939, 116.779, 123.68]
 
     with tf.variable_scope('VGG19', reuse=reuse):
         start_time = time.time()
         print ("Start to build model...")
-        rgb_scaled = rgb*255.0
+        rgb_scaled = rgb #*255.0
 
         if tf.__version__ <= '0.11':
             red, green, blue = tf.split(3, 3, rgb_scaled)

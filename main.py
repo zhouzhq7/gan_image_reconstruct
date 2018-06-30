@@ -1,4 +1,5 @@
 import argparse
+import time
 import tensorlayer as tl
 from god_config import config
 from utils import *
@@ -131,12 +132,31 @@ def train():
 
     "get iterator to get image batch from pre-stored tfrecord file"
     img_batch = inputs(filename, batch_size, n_epoch_init,
-                       shuffle_size=500, is_augment=True)
+                       shuffle_size=10000, is_augment=True)
 
+    num_of_data = 46000
+    num_of_iter_one_epoch = num_of_data // batch_size
     try:
+        epoch_time = time.time()
+        total_mse_loss, n_iter = 0.0 , 0
+
         while True:
-            imgs = sess.run([img_batch])
-            print (len(imgs))
+            if (n_iter + 1) % num_of_iter_one_epoch == 0:
+                log = "[*] Epoch: [%2d/%2d] time: %4.4fs, mse: %.8f" % (
+                    (n_iter+1)//num_of_iter_one_epoch, n_epoch_init, time.time() - epoch_time, total_mse_loss / n_iter)
+                epoch_time = time.time()
+                print (log)
+
+            step_time = time.time()
+            imgs = sess.run(img_batch)
+            err, _ = sess.run([mse_loss, g_optim_init], feed_dict={t_image:imgs.astype(np.float32)})
+            print("Epoch [%2d/%2d] %4d time: %4.4fs, mse: %.8f " % (
+                (n_iter + 1) // num_of_iter_one_epoch, n_epoch_init, n_iter, time.time() - step_time, err))
+            total_mse_loss += err
+            n_iter += 1
+
+
+
     except tf.errors.OutOfRangeError:
         print ("Done initializing G.")
 

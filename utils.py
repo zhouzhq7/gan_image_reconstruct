@@ -123,7 +123,6 @@ def augment(img):
     "4. randomly adjust the contrast"
     img = tf.image.random_contrast(img, lower=0.2, upper=1.8)
 
-    print ('using augmentation')
     return img
 
 
@@ -146,22 +145,22 @@ def inputs(filename, batch_size, num_epochs, shuffle_size, is_augment):
 
     return iterator.get_next()
 
-def run():
-    batch_size = 12
-    num_epochs = 12
-
-    filename = './tfrecord_files/images.tf'
-
-    im_batch =  inputs(filename, batch_size, num_epochs, is_augment=False)
-    #init_ops = tf.group(tf.global_variables_initializer(), tf.local_variables_initializer())
-    with tf.Session() as sess:
-        #sess.run(init_ops)
-        try:
-            while True:
-                imgs = sess.run(im_batch)
-                print (len(imgs))
-        except tf.errors.OutOfRangeError:
-            print ('Done')
+#def run():
+#    batch_size = 12
+#    num_epochs = 12
+#
+#    filename = './tfrecord_files/images.tf'
+#
+#    im_batch =  inputs(filename, batch_size, num_epochs, is_augment=False)
+#    #init_ops = tf.group(tf.global_variables_initializer(), tf.local_variables_initializer())
+#    with tf.Session() as sess:
+#        #sess.run(init_ops)
+#        try:
+#            while True:
+#                imgs = sess.run(im_batch)
+#                print (len(imgs))
+#        except tf.errors.OutOfRangeError:
+#            print ('Done')
 
 #if __name__ == '__main__':
 #    run()
