@@ -5,7 +5,7 @@ from tensorlayer.layers import *
 
 
 def VGG19(rgb, reuse):
-    # rgb: image inputs pixel value range [0, 255]
+    # rgb: image inputs pixel value range [0, 1]
     VGG_MEAN = [103.939, 116.779, 123.68]
 
     with tf.variable_scope('VGG19', reuse=reuse):
