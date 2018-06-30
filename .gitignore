@@ -1,0 +1,6 @@
+./models
+./train
+./tfrecord_files
+./checkpoints
+./samples
+.idea/
