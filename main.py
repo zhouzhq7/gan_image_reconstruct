@@ -60,7 +60,7 @@ def train():
     g_loss1 = tf.nn.sigmoid_cross_entropy_with_logits(logits=logits_fake,
                                                       labels=tf.ones_like(logits_fake), name='g_loss1')
 
-    mse_loss = tf.reduce_mean(tf.losses.mean_squared_error(net_g.outputs, t_image))
+    mse_loss = tf.reduce_mean(tf.losses.mean_squared_error(net_g.outputs, (t_image/127.5)-1))
 
     g_loss = g_loss1 + mse_loss
 
@@ -149,7 +149,7 @@ def train():
 
             step_time = time.time()
             imgs = sess.run(img_batch)
-            err, _ = sess.run([mse_loss, g_optim_init], feed_dict={t_image:imgs.astype(np.float32)})
+            err, _ = sess.run([mse_loss, g_optim_init], feed_dict={t_image:imgs})
             print("Epoch [%2d/%2d] %4d time: %4.4fs, mse: %.8f " % (
                 (n_iter + 1) // num_of_iter_one_epoch, n_epoch_init, n_iter, time.time() - step_time, err))
             total_mse_loss += err

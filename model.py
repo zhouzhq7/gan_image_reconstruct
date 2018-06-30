@@ -11,7 +11,7 @@ def VGG19(rgb, reuse):
     with tf.variable_scope('VGG19', reuse=reuse):
         start_time = time.time()
         print ("Start to build model...")
-        rgb_scaled = rgb #*255.0
+        rgb_scaled = rgb *255.0
 
         if tf.__version__ <= '0.11':
             red, green, blue = tf.split(3, 3, rgb_scaled)
