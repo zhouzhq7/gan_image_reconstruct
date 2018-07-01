@@ -72,7 +72,7 @@ def VGG19(rgb, reuse):
         print("build model finished: %fs" % (time.time() - start_time))
         return network, conv
 
-def generator(feature_map, batch_size, is_train=False, reuse=False):
+def generator(feature_map, is_train=False, reuse=False):
 
     w_init = tf.truncated_normal_initializer(stddev=0.02)
     g_init = tf.truncated_normal_initializer(mean=1.0, stddev=0.02)
@@ -86,6 +86,9 @@ def generator(feature_map, batch_size, is_train=False, reuse=False):
     c_dim = 3
 
     assert feature_map.outputs.get_shape().as_list()[1:] == [14, 14, 512]
+
+    # make sure the size matches if the size of current batch is not batch size
+    batch_size = feature_map.outputs.get_shape().as_list[0]
 
     filter_size = (5, 5)
     strides = (2, 2)

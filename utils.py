@@ -47,6 +47,15 @@ def mkdir_if_not_exists(dir):
     if not os.path.exists(dir):
         os.makedirs(dir)
 
+def get_test_images(dir='./train_samples'):
+    img_paths = glob.glob(dir+'/*.JPEG')
+    imgs = []
+    for img_path in img_paths:
+        im = misc.imread(img_path)
+        imgs.append(im)
+
+    return np.array(imgs)
+
 def _int64_feature(value):
   return tf.train.Feature(int64_list=tf.train.Int64List(value=[value]))
 

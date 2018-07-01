@@ -30,21 +30,24 @@ decay_every = config.decay_every
 filename = config.data_tfrecord_dir
 
 def train():
+    test_images = get_test_images()
 
     # <editor-fold desc="build tensorflow graph">
     # Build model
 
-    t_image = tf.placeholder(dtype='float32', shape=[batch_size, 224, 224, 3],
+    t_image = tf.placeholder(dtype='float32', shape=[None, 224, 224, 3],
                              name='t_image_input_to_vgg19')
 
     net_vgg, inputs_g = VGG19((t_image/255.0), reuse=False)
 
-    net_g, _ = generator(inputs_g, batch_size=batch_size, is_train=True, reuse=False)
+    net_g, _ = generator(inputs_g, is_train=True, reuse=False)
 
     net_d, logits_real = discriminator((t_image/127.5)-1.0, is_train=True, reuse=False)
 
     _, logits_fake = discriminator(net_g.outputs, is_train=True, reuse=True)
 
+    # ??? can i define test network as following?
+    net_g_test, _ = generator(inputs_g, is_train=False, reuse=True)
     ## define loss
     "generator"
     d_loss1 = tf.nn.sigmoid_cross_entropy_with_logits(logits=logits_real,
@@ -78,6 +81,7 @@ def train():
 
     d_optim = tf.train.AdamOptimizer(learning_rate=lr_v, beta1=beta1).minimize(d_loss, var_list=d_vars)
     # </editor-fold>
+
 
     # <editor-fold desc="make directories ">
     save_ginit_dir = "./samples/{}_ginit".format(tl.global_flag['mode'])
@@ -131,10 +135,10 @@ def train():
     print ("Initializing G with learning rate {}".format(lr_init))
 
     "get iterator to get image batch from pre-stored tfrecord file"
-    img_batch = inputs(filename, batch_size, n_epoch_init,
+    img_batch_g_init = inputs(filename, batch_size, n_epoch_init,
                        shuffle_size=10000, is_augment=True)
 
-    num_of_data = 46000
+    num_of_data = 45611
     num_of_iter_one_epoch = num_of_data // batch_size
     try:
         epoch_time = time.time()
@@ -150,7 +154,7 @@ def train():
                 tl.files.save_npz(net_g.all_params,
                                   name=checkpoints_dir + '/g_{}_init.npz'.format(tl.global_flag['mode']), sess=sess)
             step_time = time.time()
-            imgs = sess.run(img_batch)
+            imgs = sess.run(img_batch_g_init)
             err, _ = sess.run([mse_loss, g_optim_init], feed_dict={t_image:imgs.astype(np.float32)})
             print("Epoch [%2d/%2d] %4d time: %4.4fs, mse: %.8f " % (
                 (n_iter + 1) // num_of_iter_one_epoch, n_epoch_init, n_iter, time.time() - step_time, err))
@@ -162,6 +166,77 @@ def train():
                           name=checkpoints_dir + '/g_{}_init.npz'.format(tl.global_flag['mode']), sess=sess)
         print ("Done initializing G.")
 
+
+    #################################train gan##################################
+    img_batch_gan = inputs(filename, batch_size=batch_size, num_epochs=n_epoch,
+                           shuffle_size=10000, is_augment=True)
+
+    try:
+        epoch_time = time.time()
+        total_g_loss, total_d_loss, n_iter = 0, 0, 0
+
+        while True:
+            if (n_iter + 1) == 1:
+                sess.run(tf.assign(lr_v, lr_init))
+                log = " ** init lr: %f  decay_every_init: %d, lr_decay: %f (for GAN)" % (lr_init, decay_every, lr_decay)
+                print(log)
+
+            elif (n_iter+1) % (decay_every * num_of_iter_one_epoch) == 0:
+                new_lr_decay = lr_decay ** ((n_iter+1) // (decay_every * num_of_iter_one_epoch))
+                sess.run(tf.assign(lr_v, lr_init * new_lr_decay))
+                log = " ** new learning rate: %f (for GAN)" % (lr_init * new_lr_decay)
+                print(log)
+
+            if ((n_iter + 1) % num_of_iter_one_epoch == 0):
+                log = "[*] Epoch [%4d/%4d] time: %4.4fs, d_loss: %8f, g_loss: %8f" % (
+                    (n_iter+1)//num_of_iter_one_epoch, n_epoch, time.time()-epoch_time, total_d_loss/num_of_iter_one_epoch,
+                    total_g_loss/num_of_iter_one_epoch
+                )
+                print (log)
+                total_g_loss, total_d_loss = 0, 0
+                epoch_time = time.time()
+
+            step_time = time.time()
+            imgs = sess.run(img_batch_gan)
+            "update discriminator"
+            err_d, _ = sess.run([d_loss, d_optim], feed_dict={t_image: imgs})
+            "update generator"
+            err_g, err_mse, err_gan_loss, _ = sess.run([g_loss, mse_loss, g_loss1, g_optim],
+                                                       feed_dict={t_image: imgs})
+
+            log = "Epoch [%4d/%4d] %6d time: %4.4fs, d_loss: %8f, g_loss: %8f, (mse: %8f, gan_loss: %8f)" % (
+                (n_iter+1)//num_of_iter_one_epoch, n_epoch,n_iter, time.time() - step_time, err_d, err_g,
+                err_mse, err_gan_loss
+            )
+
+            print (log)
+
+
+            total_d_loss += err_d
+            total_g_loss += err_g
+            ## quick evaluation on train set
+            if ( (n_iter + 1) % (num_of_iter_one_epoch * 10) == 0):
+                out = sess.run(net_g_test.outputs,
+                               {t_image: test_images})  # ; print('gen sub-image:', out.shape, out.min(), out.max())
+                print("[*] save images")
+                tl.vis.save_images(out, [8, 8], save_gan_dir + '/train_%d.png' % ((n_iter + 1) // num_of_iter_one_epoch))
+
+            ## save model
+            if ( (n_iter + 1) % (num_of_iter_one_epoch * 10) == 0):
+                tl.files.save_npz(net_g.all_params, name=checkpoints_dir + '/g_{}.npz'.format(tl.global_flag['mode']),
+                                  sess=sess)
+                tl.files.save_npz(net_d.all_params, name=checkpoints_dir + '/d_{}.npz'.format(tl.global_flag['mode']),
+                                  sess=sess)
+            n_iter += 1
+
+
+
+
+    except tf.errors.OutOfRangeError:
+        tl.files.save_npz(net_g.all_params,
+                          name=checkpoints_dir+'/g_{}.npz'.format(tl.global_flag['mode'], sess=sess))
+        tl.files.save_npz(net_d.all_params,
+                          name=checkpoints_dir+'/d_{}.npz'.format(tl.global_flag['mode']), sess=sess)
 
 
 def evaluate():
