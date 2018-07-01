@@ -60,7 +60,7 @@ def train():
 
     "discriminator"
 
-    g_loss1 = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=logits_fake,
+    g_loss1 = 0.001*tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=logits_fake,
                                                       labels=tf.ones_like(logits_fake), name='g_loss1'))
 
     mse_loss = tf.reduce_mean(tf.losses.mean_squared_error(net_g.outputs, (t_image/127.5)-1.0))
@@ -204,7 +204,7 @@ def train():
             err_g, err_mse, err_gan_loss, _ = sess.run([g_loss, mse_loss, g_loss1, g_optim],
                                                        feed_dict={t_image: imgs})
 
-            log = "Epoch [%4d/%4d] %6d time: %4.4fs, d_loss: %8f, g_loss: %8f, (mse: %8f, gan_loss: %8f)" % (
+            log = "Epoch [%4d/%4d] %6d time: %4.4fs, d_loss: %8f, g_loss: %8f, (mse: %10f, gan_loss: %10f)" % (
                 (n_iter+1)//num_of_iter_one_epoch, n_epoch,n_iter, time.time() - step_time, err_d, err_g,
                 err_mse, err_gan_loss
             )
