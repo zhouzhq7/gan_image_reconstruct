@@ -218,8 +218,10 @@ def train():
             if ( (n_iter + 1) % (num_of_iter_one_epoch * 10) == 0):
                 out = sess.run(net_g_test.outputs,
                                {t_image: test_images})  # ; print('gen sub-image:', out.shape, out.min(), out.max())
+                out = (out+1)*127.5
+                print ("gen sub image:", out.shape, out.min(), out.max())
                 print("[*] save images")
-                tl.vis.save_images(out, [8, 8], save_gan_dir + '/train_%d.png' % ((n_iter + 1) // num_of_iter_one_epoch))
+                tl.vis.save_images(out.astype(np.uint8), [8, 8], save_gan_dir + '/train_%d.png' % ((n_iter + 1) // num_of_iter_one_epoch))
 
             ## save model
             if ( (n_iter + 1) % (num_of_iter_one_epoch * 10) == 0):
