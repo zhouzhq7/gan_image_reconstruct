@@ -50,18 +50,18 @@ def train():
     net_g_test, _ = generator(inputs_g, is_train=False, reuse=True)
     ## define loss
     "generator"
-    d_loss1 = tf.nn.sigmoid_cross_entropy_with_logits(logits=logits_real,
-                                                      labels=tf.ones_like(logits_real), name='d_loss1')
+    d_loss1 = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=logits_real,
+                                                      labels=tf.ones_like(logits_real), name='d_loss1'))
 
-    d_loss2 = tf.nn.sigmoid_cross_entropy_with_logits(logits=logits_fake,
-                                                      labels=tf.zeros_like(logits_fake), name='d_loss2')
+    d_loss2 = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=logits_fake,
+                                                      labels=tf.zeros_like(logits_fake), name='d_loss2'))
 
     d_loss = d_loss1 + d_loss2
 
     "discriminator"
 
-    g_loss1 = tf.nn.sigmoid_cross_entropy_with_logits(logits=logits_fake,
-                                                      labels=tf.ones_like(logits_fake), name='g_loss1')
+    g_loss1 = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=logits_fake,
+                                                      labels=tf.ones_like(logits_fake), name='g_loss1'))
 
     mse_loss = tf.reduce_mean(tf.losses.mean_squared_error(net_g.outputs, (t_image/127.5)-1.0))
 
@@ -210,7 +210,6 @@ def train():
             )
 
             print (log)
-
 
             total_d_loss += err_d
             total_g_loss += err_g
