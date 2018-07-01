@@ -1,7 +1,6 @@
 models/
 train/
 tfrecord_files/
-checkpoints/
 samples/
 .idea/
 __pycache__/
