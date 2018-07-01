@@ -88,7 +88,7 @@ def generator(feature_map, is_train=False, reuse=False):
     assert feature_map.outputs.get_shape().as_list()[1:] == [14, 14, 512]
 
     # make sure the size matches if the size of current batch is not batch size
-    batch_size = feature_map.outputs.get_shape().as_list[0]
+    batch_size = feature_map.outputs.get_shape().as_list()[0]
 
     filter_size = (5, 5)
     strides = (2, 2)
