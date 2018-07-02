@@ -9,7 +9,7 @@ config.data_tfrecord_dir = './train/images150.tf'
 
 
 "optimization"
-config.batch_size = 64
+config.batch_size = 128
 config.lr_init = 1e-6
 config.beta1 = 0.9
 

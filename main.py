@@ -29,6 +29,7 @@ decay_every = config.decay_every
 "tfrecord data file"
 filename = config.data_tfrecord_dir
 
+save_every_epoch = 1
 def train():
     test_images = get_test_images()
 
@@ -60,10 +61,10 @@ def train():
 
     "discriminator"
 
-    g_loss1 = 0.001*tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=logits_fake,
+    g_loss1 = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=logits_fake,
                                                       labels=tf.ones_like(logits_fake), name='g_loss1'))
 
-    mse_loss = tf.reduce_mean(tf.losses.mean_squared_error(net_g.outputs, (t_image/127.5)-1.0))
+    mse_loss = 2000*tf.reduce_mean(tf.losses.mean_squared_error(net_g.outputs, (t_image/127.5)-1.0))
 
     g_loss = g_loss1 + mse_loss
 
@@ -152,12 +153,12 @@ def train():
                 print (log)
 
             # save model
-            if ((n_iter+1) % (10*num_of_iter_one_epoch) == 0):
+            if ((n_iter+1) % (save_every_epoch * num_of_iter_one_epoch) == 0):
                 tl.files.save_npz(net_g.all_params,
                                   name=checkpoints_dir + '/g_{}_init.npz'.format(tl.global_flag['mode']), sess=sess)
 
             ## quick evaluation on train set
-            if ( (n_iter + 1) % (num_of_iter_one_epoch * 10) == 0):
+            if ( (n_iter + 1) % (num_of_iter_one_epoch * save_every_epoch) == 0):
                 out = sess.run(net_g_test.outputs,
                                {t_image: test_images})
                 out = (out+1)*127.5
@@ -225,8 +226,8 @@ def train():
 
             total_d_loss += err_d
             total_g_loss += err_g
-            ## quick evaluation on train set
-            if ( (n_iter + 1) % (num_of_iter_one_epoch * 10) == 0):
+            # quick evaluation on train set
+            if ( (n_iter + 1) % (num_of_iter_one_epoch * save_every_epoch) == 0):
                 out = sess.run(net_g_test.outputs,
                                {t_image: test_images})
                 out = (out+1)*127.5
@@ -235,7 +236,7 @@ def train():
                 tl.vis.save_images(out.astype(np.uint8), [8, 8], save_gan_dir + '/train_%d.png' % ((n_iter + 1) // num_of_iter_one_epoch))
 
             ## save model
-            if ( (n_iter + 1) % (num_of_iter_one_epoch * 10) == 0):
+            if ( (n_iter + 1) % (num_of_iter_one_epoch * save_every_epoch) == 0):
                 tl.files.save_npz(net_g.all_params, name=checkpoints_dir + '/g_{}.npz'.format(tl.global_flag['mode']),
                                   sess=sess)
                 tl.files.save_npz(net_d.all_params, name=checkpoints_dir + '/d_{}.npz'.format(tl.global_flag['mode']),
