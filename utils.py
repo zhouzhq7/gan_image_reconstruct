@@ -172,5 +172,5 @@ def inputs(filename, batch_size, num_epochs, shuffle_size, is_augment):
 #            print ('Done')
 
 #if __name__ == '__main__':
-#    run()
-#    #load_and_save_to_tfrecord('../cropped_images_125', './tfrecord_fils', 'images')
+#    #run()
+#    load_and_save_to_tfrecord('../cropped_images_150', './train', 'images150')

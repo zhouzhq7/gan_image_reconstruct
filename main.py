@@ -136,9 +136,9 @@ def train():
 
     "get iterator to get image batch from pre-stored tfrecord file"
     img_batch_g_init = inputs(filename, batch_size, n_epoch_init,
-                       shuffle_size=10000, is_augment=True)
+                       shuffle_size=50000, is_augment=True)
 
-    num_of_data = 45611
+    num_of_data = 186961
     num_of_iter_one_epoch = num_of_data // batch_size
     try:
         epoch_time = time.time()
@@ -150,9 +150,21 @@ def train():
                     (n_iter+1)//num_of_iter_one_epoch, n_epoch_init, time.time() - epoch_time, total_mse_loss / n_iter)
                 epoch_time = time.time()
                 print (log)
+
+            # save model
             if ((n_iter+1) % (10*num_of_iter_one_epoch) == 0):
                 tl.files.save_npz(net_g.all_params,
                                   name=checkpoints_dir + '/g_{}_init.npz'.format(tl.global_flag['mode']), sess=sess)
+
+            ## quick evaluation on train set
+            if ( (n_iter + 1) % (num_of_iter_one_epoch * 10) == 0):
+                out = sess.run(net_g_test.outputs,
+                               {t_image: test_images})
+                out = (out+1)*127.5
+                print ("gen sub image:", out.shape, out.min(), out.max())
+                print("[*] save images")
+                tl.vis.save_images(out.astype(np.uint8), [8, 8], save_ginit_dir + '/train_%d.png' % ((n_iter + 1) // num_of_iter_one_epoch))
+
             step_time = time.time()
             imgs = sess.run(img_batch_g_init)
             err, _ = sess.run([mse_loss, g_optim_init], feed_dict={t_image:imgs.astype(np.float32)})
@@ -216,7 +228,7 @@ def train():
             ## quick evaluation on train set
             if ( (n_iter + 1) % (num_of_iter_one_epoch * 10) == 0):
                 out = sess.run(net_g_test.outputs,
-                               {t_image: test_images})  # ; print('gen sub-image:', out.shape, out.min(), out.max())
+                               {t_image: test_images})
                 out = (out+1)*127.5
                 print ("gen sub image:", out.shape, out.min(), out.max())
                 print("[*] save images")
