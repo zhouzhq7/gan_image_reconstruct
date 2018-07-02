@@ -136,7 +136,7 @@ def train():
 
     "get iterator to get image batch from pre-stored tfrecord file"
     img_batch_g_init = inputs(filename, batch_size, n_epoch_init,
-                       shuffle_size=50000, is_augment=True)
+                       shuffle_size=50000, is_augment=False)
 
     num_of_data = 186961
     num_of_iter_one_epoch = num_of_data // batch_size
@@ -181,7 +181,7 @@ def train():
 
     #################################train gan##################################
     img_batch_gan = inputs(filename, batch_size=batch_size, num_epochs=n_epoch,
-                           shuffle_size=10000, is_augment=True)
+                           shuffle_size=50000, is_augment=False)
 
     try:
         epoch_time = time.time()
