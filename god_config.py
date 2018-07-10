@@ -14,8 +14,8 @@ config.lr_init = 5e-6
 config.beta1 = 0.9
 
 "g initialization"
-config.n_epoch_init = 100
+config.n_epoch_init = 50
 
-config.n_epoch = 2000
+config.n_epoch = 100
 config.lr_decay = 0.1
 config.decay_every = int(config.n_epoch/2)
