@@ -102,14 +102,14 @@ def train():
     tl.layers.initialize_global_variables(sess)
 
     if tl.files.load_and_assign_npz(sess=sess,
-                                    name=checkpoints_dir+"/g_{}.npz".format(tl.global_flag['mode']),
+                                    name=checkpoints_dir+"/g_{}_end.npz".format(tl.global_flag['mode']),
                                     network=net_g) is False:
         tl.files.load_and_assign_npz(sess=sess,
-                                     name=checkpoints_dir + "/g_{}_init.npz".format(tl.global_flag['mode']),
+                                     name=checkpoints_dir + "/g_{}_init_end.npz".format(tl.global_flag['mode']),
                                      network=net_g)
 
     tl.files.load_and_assign_npz(sess=sess,
-                                 name=checkpoints_dir+"/d_{}.npz".format(tl.global_flag['mode']),
+                                 name=checkpoints_dir+"/d_{}_end.npz".format(tl.global_flag['mode']),
                                  network=net_d)
     # </editor-fold>
 
@@ -155,7 +155,8 @@ def train():
             # save model
             if ((n_iter+1) % (save_every_epoch * num_of_iter_one_epoch) == 0):
                 tl.files.save_npz(net_g.all_params,
-                                  name=checkpoints_dir + '/g_{}_init.npz'.format(tl.global_flag['mode']), sess=sess)
+                                  name=checkpoints_dir + '/g_{}_init_{}.npz'.format(tl.global_flag['mode'],
+                                                                                    (n_iter+1) % (save_every_epoch * num_of_iter_one_epoch)), sess=sess)
 
             ## quick evaluation on train set
             if ( (n_iter + 1) % (num_of_iter_one_epoch * save_every_epoch) == 0):
@@ -176,7 +177,7 @@ def train():
 
     except tf.errors.OutOfRangeError:
         tl.files.save_npz(net_g.all_params,
-                          name=checkpoints_dir + '/g_{}_init.npz'.format(tl.global_flag['mode']), sess=sess)
+                          name=checkpoints_dir + '/g_{}_init_end.npz'.format(tl.global_flag['mode']), sess=sess)
         print ("Done initializing G.")
 
 
@@ -202,7 +203,7 @@ def train():
 
             if ((n_iter + 1) % num_of_iter_one_epoch == 0):
                 log = "[*] Epoch [%4d/%4d] time: %4.4fs, d_loss: %8f, g_loss: %8f" % (
-                    (n_iter+1)//num_of_iter_one_epoch+35, n_epoch, time.time()-epoch_time, total_d_loss/num_of_iter_one_epoch,
+                    (n_iter+1)//num_of_iter_one_epoch, n_epoch, time.time()-epoch_time, total_d_loss/num_of_iter_one_epoch,
                     total_g_loss/num_of_iter_one_epoch
                 )
                 print (log)
@@ -218,7 +219,7 @@ def train():
                                                        feed_dict={t_image: imgs})
 
             log = "Epoch [%4d/%4d] %6d time: %4.4fs, d_loss: %8f, g_loss: %8f, (mse: %10f, gan_loss: %10f)" % (
-                (n_iter+1)//num_of_iter_one_epoch+35, n_epoch,n_iter, time.time() - step_time, err_d, err_g,
+                (n_iter+1)//num_of_iter_one_epoch, n_epoch,n_iter, time.time() - step_time, err_d, err_g,
                 err_mse, err_gan_loss
             )
 
@@ -233,13 +234,15 @@ def train():
                 out = (out+1)*127.5
                 print ("gen sub image:", out.shape, out.min(), out.max())
                 print("[*] save images")
-                tl.vis.save_images(out.astype(np.uint8), [8, 8], save_gan_dir + '/train_%d.png' % ((n_iter + 1) // num_of_iter_one_epoch + 35))
+                tl.vis.save_images(out.astype(np.uint8), [8, 8], save_gan_dir + '/train_%d.png' % ((n_iter + 1) // num_of_iter_one_epoch))
 
             ## save model
             if ( (n_iter + 1) % (num_of_iter_one_epoch * save_every_epoch) == 0):
-                tl.files.save_npz(net_g.all_params, name=checkpoints_dir + '/g_{}.npz'.format(tl.global_flag['mode']),
+                tl.files.save_npz(net_g.all_params, name=checkpoints_dir + '/g_{}_{}.npz'.format(tl.global_flag['mode'],
+                                                                                                 (n_iter + 1) // num_of_iter_one_epoch),
                                   sess=sess)
-                tl.files.save_npz(net_d.all_params, name=checkpoints_dir + '/d_{}.npz'.format(tl.global_flag['mode']),
+                tl.files.save_npz(net_d.all_params, name=checkpoints_dir + '/d_{}_{}.npz'.format(tl.global_flag['mode'],
+                                                                                                 (n_iter + 1) // num_of_iter_one_epoch),
                                   sess=sess)
             n_iter += 1
 
@@ -248,9 +251,9 @@ def train():
 
     except tf.errors.OutOfRangeError:
         tl.files.save_npz(net_g.all_params,
-                          name=checkpoints_dir+'/g_{}.npz'.format(tl.global_flag['mode'], sess=sess))
+                          name=checkpoints_dir+'/g_{}_end.npz'.format(tl.global_flag['mode'], sess=sess))
         tl.files.save_npz(net_d.all_params,
-                          name=checkpoints_dir+'/d_{}.npz'.format(tl.global_flag['mode']), sess=sess)
+                          name=checkpoints_dir+'/d_{}_end.npz'.format(tl.global_flag['mode']), sess=sess)
 
 
 def evaluate():
