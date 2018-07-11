@@ -57,7 +57,6 @@ def VGG19(rgb, reuse):
         network = Conv2d(network, n_filter=512, filter_size=(3, 3), strides=(1, 1), act=tf.nn.relu, padding='SAME', name='conv4_3')
         network = Conv2d(network, n_filter=512, filter_size=(3, 3), strides=(1, 1), act=tf.nn.relu, padding='SAME', name='conv4_4')
         network = MaxPool2d(network, filter_size=(2, 2), strides=(2, 2), padding='SAME', name='pool4')  # (batch_size, 14, 14, 512)
-        conv = network
         """ conv5 """
         network = Conv2d(network, n_filter=512, filter_size=(3, 3), strides=(1, 1), act=tf.nn.relu, padding='SAME', name='conv5_1')
         network = Conv2d(network, n_filter=512, filter_size=(3, 3), strides=(1, 1), act=tf.nn.relu, padding='SAME', name='conv5_2')
@@ -69,6 +68,7 @@ def VGG19(rgb, reuse):
         network = DenseLayer(network, n_units=4096, act=tf.nn.relu, name='fc6')
         network = DenseLayer(network, n_units=4096, act=tf.nn.relu, name='fc7')
         network = DenseLayer(network, n_units=1000, act=tf.identity, name='fc8')
+        conv = network
         print("build model finished: %fs" % (time.time() - start_time))
         return network, conv
 
@@ -85,7 +85,7 @@ def generator(feature_map, is_train=False, reuse=False):
 
     c_dim = 3
 
-    assert feature_map.outputs.get_shape().as_list()[1:] == [14, 14, 512]
+    assert feature_map.outputs.get_shape().as_list()[1:] == [1000]
 
     # make sure the size matches if the size of current batch is not batch size
     batch_size = feature_map.outputs.get_shape().as_list()[0]
@@ -95,11 +95,18 @@ def generator(feature_map, is_train=False, reuse=False):
 
     with tf.variable_scope('generator', reuse=reuse):
 
-        # (14, 14, 512)
+        # (1000,)
         net_in = InputLayer(feature_map.outputs, name='g/in')
 
+        # (14*14*32*15=14*14*512, )
+        net_h0 = DenseLayer(net_in, n_units=gf_dim*16*s16*s16, W_init=w_init,
+                            act = tf.identity, name='g/h0/lin')
+
+
         # (14, 14, 512)
-        net_h0 = BatchNormLayer(net_in, act=tf.nn.relu, is_train=is_train,
+        net_h0 = ReshapeLayer(net_h0, shape=[-1, s16, s16, gf_dim*16], name="g/h0/reshape")
+
+        net_h0 = BatchNormLayer(net_h0, act=tf.nn.relu, is_train=is_train,
                                 gamma_init=g_init, name='g/h0/batch_norm')
 
         # (28, 28, 256)
@@ -152,7 +159,6 @@ def discriminator(inputs, is_train=True, reuse=False):
         net_h0 = Conv2d(net_in, n_filter=df_dim, filter_size=filter_size, strides=strides,
                         act = lambda x: tl.act.lrelu(x, 0.2), padding='SAME', W_init=w_init, name='d/h0/conv2d')
 
-        # Why not batch normalized in the first layer ???
 
         # (56, 56, 128)
         net_h1 = Conv2d(net_h0, n_filter=df_dim*2, filter_size=filter_size, strides=strides,
