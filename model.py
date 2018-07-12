@@ -66,9 +66,9 @@ def VGG19(rgb, reuse):
         """ fc 6~8 """
         network = FlattenLayer(network, name='flatten')
         network = DenseLayer(network, n_units=4096, act=tf.nn.relu, name='fc6')
+        conv = network
         network = DenseLayer(network, n_units=4096, act=tf.nn.relu, name='fc7')
         network = DenseLayer(network, n_units=1000, act=tf.identity, name='fc8')
-        conv = network
         print("build model finished: %fs" % (time.time() - start_time))
         return network, conv
 
@@ -85,7 +85,7 @@ def generator(feature_map, is_train=False, reuse=False):
 
     c_dim = 3
 
-    assert feature_map.outputs.get_shape().as_list()[1:] == [1000]
+    assert feature_map.outputs.get_shape().as_list()[1:] == [4096]
 
     # make sure the size matches if the size of current batch is not batch size
     batch_size = feature_map.outputs.get_shape().as_list()[0]
