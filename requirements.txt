@@ -21,7 +21,7 @@ h5py==2.7.1
 html5lib==0.9999999
 idna==2.6
 imageio==2.3.0
-Jinja2==2.8
+Jinja2==2.11.3
 kiwisolver==1.0.1
 Markdown==2.6.11
 MarkupSafe==0.23
