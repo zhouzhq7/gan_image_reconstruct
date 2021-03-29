@@ -34,7 +34,7 @@ progressbar2==3.37.1
 protobuf==3.5.2.post1
 pycosat==0.6.3
 pycparser==2.18
-Pygments==2.0.2
+Pygments==2.7.4
 pyOpenSSL==17.5.0
 pyparsing==2.2.0
 PySocks==1.6.7
