@@ -50,7 +50,7 @@ scipy==1.1.0
 six==1.11.0
 tensorboard==1.8.0
 tensorflow==1.8.0
-tensorflow-gpu==1.4.0
+tensorflow-gpu==2.5.1
 tensorflow-tensorboard==0.4.0
 tensorlayer==1.8.5
 termcolor==1.1.0
